@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Mode</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1a1a40;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #farmContainer {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .potato-plot {
+            width: 100px;
+            height: 100px;
+            background-color: #d4a373;
+            border: 2px dashed #8b5a2b;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .potato {
+            width: 80px;
+            height: 80px;
+            background-color: #c49a6c;
+            border-radius: 50%;
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+        }
+
+        #coinCount, #potatoCount, #achievementMessage {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px;
+            margin: 10px;
+            font-size: 18px;
+            color: white;
+            background-color: #000066;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover { background-color: #000099; }
+
+        .customize-container { margin-top: 20px; display: none; } /* Hidden until unlocked */
+    </style>
+</head>
+<body>
+    <h1 class="title">Potato Farm Mode</h1>
+    <p>Click on a plot to start growing potatoes!</p>
+    
+    <p id="coinCount">Coins: 0</p>
+    <p id="potatoCount">Potatoes Grown: 0</p>
+    <p id="achievementMessage">Achievements: 0</p>
+    
+    <div id="farmContainer">
+        <div class="potato-plot" onclick="growPotato(this)">Plant</div>
+    </div>
+
+    <button class="btn" id="buyPlot" onclick="buyPlot()" disabled>Buy More Space (5 Coins)</button>
+    <button class="btn" id="sellPotatoes" onclick="sellPotatoes()" disabled>Sell Potatoes (3 Coins Each)</button>
+    
+    <!-- 🎨 Color Picker for Customization (Unlocks at 10 potatoes) -->
+    <div class="customize-container" id="customizeContainer">
+        <p>Customize your potato color:</p>
+        <input type="color" id="colorPicker" value="#c49a6c">
+        <button class="btn" onclick="customizePotato()">Apply Color</button>
+    </div>
+
+    <button class="btn" onclick="location.href='index.html'">Back to Home</button>
+
+    <script>
+        let potatoCount = 0;
+        let totalHarvested = 0;
+        let coinCount = 0;
+        let farmSize = 1;
+        const maxPlots = 9;
+        let achievementsUnlocked = [];
+        let customizationUnlocked = false;
+        let potatoColor = "#c49a6c"; // Default color
+
+        const achievements = [
+            { threshold: 1, message: "First Potato! 🥔" },
+            { threshold: 5, message: "Potato Farmer! 🌱" },
+            { threshold: 10, message: "Master Harvester! 🚜" }
+        ];
+
+        function growPotato(plot) {
+            if (plot.classList.contains("growing")) return;
+            plot.innerHTML = `<div class="potato" style="background-color: ${potatoColor};"></div>`;
+            plot.classList.add("growing");
+            
+            setTimeout(() => {
+                alert("You harvested a potato!");
+                potatoCount++;
+                totalHarvested++;
+                document.getElementById("potatoCount").textContent = `Potatoes Grown: ${totalHarvested}`;
+                plot.innerHTML = "Plant";
+                plot.classList.remove("growing");
+                checkAchievements();
+                updateShop();
+            }, 3000);
+        }
+
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (totalHarvested >= achievement.threshold && !achievementsUnlocked.includes(achievement.threshold)) {
+                    achievementsUnlocked.push(achievement.threshold);
+                    alert(`🎉 Achievement Unlocked: ${achievement.message}`);
+                }
+            });
+            document.getElementById("achievementMessage").textContent = `Achievements: ${achievementsUnlocked.length}`;
+            if (achievementsUnlocked.length === achievements.length) {
+                unlockCustomization();
+            }
+        }
+
+        function unlockCustomization() {
+            customizationUnlocked = true;
+            document.getElementById("customizeContainer").style.display = "block";
+        }
+
+        function customizePotato() {
+            potatoColor = document.getElementById("colorPicker").value;
+            document.querySelectorAll(".potato").forEach(potato => {
+                potato.style.backgroundColor = potatoColor;
+            });
+            alert(`Potatoes are now ${potatoColor}! 🌈🥔`);
+        }
+
+        function buyPlot() {
+            if (coinCount < 5 || farmSize >= maxPlots) {
+                alert("Not enough coins or max plots reached! 🚫");
+                return;
+            }
+
+            coinCount -= 5;
+            farmSize++;
+
+            document.getElementById("coinCount").textContent = `Coins: ${coinCount}`;
+
+            const newPlot = document.createElement("div");
+            newPlot.className = "potato-plot";
+            newPlot.innerText = "Plant";
+            newPlot.onclick = function () { growPotato(newPlot); };
+
+            document.getElementById("farmContainer").appendChild(newPlot);
+
+            alert(`You bought a new plot! 🌱 Total plots: ${farmSize}`);
+
+            updateShop();
+        }
+
+        function sellPotatoes() {
+            if (potatoCount >= 1) { 
+                let sellAmount = Math.min(potatoCount, 5); 
+                potatoCount -= sellAmount;
+                coinCount += sellAmount * 3; 
+
+                document.getElementById("potatoCount").textContent = `Potatoes Grown: ${totalHarvested}`;
+                document.getElementById("coinCount").textContent = `Coins: ${coinCount}`;
+
+                alert(`You sold ${sellAmount} potatoes for ${sellAmount * 3} coins! 💰`);
+
+                updateShop();
+            } else {
+                alert("You don't have any potatoes to sell! 🥔❌");
+            }
+        }
+
+        function updateShop() {
+            document.getElementById("buyPlot").disabled = coinCount < 5 || farmSize >= maxPlots;
+            document.getElementById("sellPotatoes").disabled = potatoCount < 1;
+        }
+    </script>
+</body>
+</html>

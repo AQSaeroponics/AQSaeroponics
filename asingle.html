@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeroponic Potato Growth</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1a1a40;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #potatoContainer {
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .potato-model {
+            width: 100px;
+            height: 100px;
+            background-color: #c49a6c;
+            border-radius: 50%;
+            margin: 20px auto;
+            transition: transform 1s ease-in-out, background-color 1s ease-in-out;
+            position: relative;
+        }
+
+        .sprout { width: 120px; height: 120px; background-color: #8b5a2b; }
+        .small-plant { width: 140px; height: 140px; background-color: #6b8e23; }
+        .mature-plant { width: 160px; height: 160px; background-color: #228b22; }
+        .harvested { width: 100px; height: 100px; background-color: #c49a6c; }
+
+        .mist {
+            width: 100px;
+            height: 20px;
+            background: rgba(173, 216, 230, 0.6);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .mist-active {
+            opacity: 1;
+        }
+
+        .progress-bar {
+            width: 50%;
+            height: 20px;
+            background-color: #ddd;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #000;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #228b22;
+            transition: width 1s ease-in-out;
+        }
+
+        .btn {
+            padding: 10px;
+            margin: 10px;
+            font-size: 18px;
+            color: white;
+            background-color: #000066;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #000099;
+        }
+
+        .customize-container {
+            margin-top: 20px;
+            display: none; /* Hidden until unlocked */
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Aeroponic Potato Growth</h1>
+    <p>Click "Grow" to simulate the aeroponic potato growth process!</p>
+    
+    <button class="btn" onclick="growPotato()">Grow</button>
+    
+    <div id="potatoContainer">
+        <div id="potatoModel" class="potato-model">
+            <div id="mistEffect" class="mist"></div>
+        </div>
+        <p id="stageName">Week 0 – Seed</p>
+        <p id="growthDuration">Duration: 0 weeks</p>
+        <p id="potatoCount">Potatoes Harvested: 0</p>
+        <p id="achievementMessage">Achievements: 0</p>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+
+    <!-- 🎨 Color Picker (Unlocks after all achievements) -->
+    <div class="customize-container" id="customizeContainer">
+        <p>Customize your potato color:</p>
+        <input type="color" id="colorPicker" value="#c49a6c">
+        <button class="btn" onclick="customizePotato()">Apply Color</button>
+    </div>
+
+    <button class="btn" onclick="location.href='index.html'">Back to Home</button>
+
+    <script>
+        let stage = 0;
+        let totalHarvested = 0;
+        let achievementsUnlocked = [];
+        let potatoColor = "#c49a6c"; // Default color
+
+        const achievements = [
+            { threshold: 1, message: "First Aeroponic Potato! 🥔💨" },
+            { threshold: 5, message: "Aeroponic Farmer! 🌱" },
+            { threshold: 10, message: "Aeroponic Master! 🚜" }
+        ];
+
+        const stages = [
+            { name: "Seed", weeks: 0 },
+            { name: "Sprout", weeks: 2 },
+            { name: "Small Plant", weeks: 4 },
+            { name: "Mature Plant", weeks: 8 },
+            { name: "Harvested", weeks: 12 }
+        ];
+
+        function growPotato() {
+            if (stage >= stages.length - 1) {
+                alert("The aeroponic potatoes are ready for harvest!");
+                totalHarvested++;
+                document.getElementById("potatoCount").textContent = `Potatoes Harvested: ${totalHarvested}`;
+                checkAchievements();
+                setTimeout(resetPotato, 1000);
+                return;
+            }
+
+            stage++;
+            document.getElementById("stageName").textContent = `Week ${stages[stage].weeks} – ${stages[stage].name}`;
+            document.getElementById("growthDuration").textContent = `Duration: ${stages[stage].weeks} weeks`;
+            document.getElementById("progress").style.width = `${(stage / (stages.length - 1)) * 100}%`;
+
+            // Activate misting system
+            const mistEffect = document.getElementById("mistEffect");
+            mistEffect.classList.add("mist-active");
+            setTimeout(() => mistEffect.classList.remove("mist-active"), 2000);
+
+            // Change potato growth stage & apply custom color
+            const potatoModel = document.getElementById("potatoModel");
+            potatoModel.className = "potato-model";
+            potatoModel.style.backgroundColor = potatoColor;
+            if (stage === 1) potatoModel.classList.add("sprout");
+            else if (stage === 2) potatoModel.classList.add("small-plant");
+            else if (stage === 3) potatoModel.classList.add("mature-plant");
+            else if (stage === 4) potatoModel.classList.add("harvested");
+        }
+
+        function resetPotato() {
+            stage = 0;
+            document.getElementById("stageName").textContent = "Week 0 – Seed";
+            document.getElementById("growthDuration").textContent = "Duration: 0 weeks";
+            document.getElementById("progress").style.width = "0%";
+            document.getElementById("potatoModel").className = "potato-model";
+            document.getElementById("potatoModel").style.backgroundColor = potatoColor;
+        }
+
+        function checkAchievements() {
+            if (achievementsUnlocked.length < achievements.length) {
+                achievements.forEach(achievement => {
+                    if (totalHarvested >= achievement.threshold && !achievementsUnlocked.includes(achievement.threshold)) {
+                        achievementsUnlocked.push(achievement.threshold);
+                        alert(`Achievement Unlocked: ${achievement.message}`);
+                    }
+                });
+
+                document.getElementById("achievementMessage").textContent = `Achievements: ${achievementsUnlocked.length}`;
+
+                if (achievementsUnlocked.length === achievements.length) {
+                    document.getElementById("customizeContainer").style.display = "block";
+                }
+            }
+        }
+
+        function customizePotato() {
+            potatoColor = document.getElementById("colorPicker").value;
+            document.getElementById("potatoModel").style.backgroundColor = potatoColor;
+        }
+    </script>
+</body>
+</html>
